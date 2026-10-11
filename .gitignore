@@ -1,0 +1,14 @@
+# Environment & Secrets
+.env
+.streamlit/secrets.toml
+
+# Database
+records.db
+
+# Python bytecode & environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
