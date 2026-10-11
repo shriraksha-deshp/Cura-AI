@@ -22,7 +22,7 @@ from google.genai import types
 
 MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 DB = os.getenv("DB_PATH", "records.db")
-LANG_OPTIONS = ["ENGLISH", "HINDI", "TELUGU", "KANNADA"]
+LANG_OPTIONS = ["ENGLISH", "HINDI", "TELUGU", "TAMIL", "KANNADA"]
 
 STRINGS = {
     "ENGLISH": {
@@ -51,7 +51,7 @@ STRINGS = {
         "from": "Document date:", "cal_blue": "Highlighted dates have saved documents.",
         "upload_title": "Scan & analyze report",
         "upload_label": "Upload prescription or lab report (JPG, PNG, PDF)",
-        "analyze_btn": "✨ Analyze document", "api_key_err": "Configure your Gemini API key in the sidebar.",
+        "analyze_btn": "✨ Analyze document", "api_key_err": "The AI service is not configured. Please contact the Cura AI team.",
         "reading_doc": "Reading and analyzing the document…", "read_err": "Unable to analyze document:",
         "save_timeline": "💾 Save to my health timeline",
         "saved_success": "Report analyzed and saved to your timeline.",
@@ -95,7 +95,7 @@ STRINGS = {
         "your_treatment": "💊 नवीनतम रिपोर्ट की दवाएं", "treatment_empty": "सहेजे गए पर्चे की दवाएं यहां दिखेंगी।",
         "from": "दस्तावेज़ दिनांक:", "cal_blue": "चिह्नित तारीखों पर दस्तावेज़ सहेजे गए हैं।",
         "upload_title": "रिपोर्ट स्कैन और विश्लेषण करें", "upload_label": "पर्चा या लैब रिपोर्ट (JPG, PNG, PDF)",
-        "analyze_btn": "✨ दस्तावेज़ का विश्लेषण करें", "api_key_err": "साइडबार में Gemini API कुंजी दर्ज करें।",
+        "analyze_btn": "✨ दस्तावेज़ का विश्लेषण करें", "api_key_err": "AI सेवा कॉन्फ़िगर नहीं है। कृपया Cura AI टीम से संपर्क करें।",
         "reading_doc": "दस्तावेज़ का विश्लेषण हो रहा है…", "read_err": "दस्तावेज़ का विश्लेषण नहीं हो सका:",
         "save_timeline": "💾 टाइमलाइन में सहेजें", "saved_success": "रिपोर्ट टाइमलाइन में सहेजी गई।",
         "timeline_title": "🕒 स्वास्थ्य टाइमलाइन", "timeline_empty": "अभी कोई इतिहास नहीं है। पहले दस्तावेज़ अपलोड करें।",
@@ -133,7 +133,7 @@ STRINGS = {
         "your_treatment": "💊 తాజా నివేదికలోని మందులు", "treatment_empty": "సేవ్ చేసిన ప్రిస్క్రిప్షన్ మందులు ఇక్కడ కనిపిస్తాయి.",
         "from": "పత్రం తేదీ:", "cal_blue": "గుర్తించిన తేదీల్లో పత్రాలు సేవ్ అయ్యాయి.",
         "upload_title": "నివేదికను విశ్లేషించండి", "upload_label": "ప్రిస్క్రిప్షన్ లేదా ల్యాబ్ నివేదిక (JPG, PNG, PDF)",
-        "analyze_btn": "✨ పత్రాన్ని విశ్లేషించండి", "api_key_err": "సైడ్‌బార్‌లో Gemini API కీ నమోదు చేయండి.",
+        "analyze_btn": "✨ పత్రాన్ని విశ్లేషించండి", "api_key_err": "AI సేవ కాన్ఫిగర్ చేయబడలేదు. దయచేసి Cura AI బృందాన్ని సంప్రదించండి.",
         "reading_doc": "పత్రాన్ని విశ్లేషిస్తోంది…", "read_err": "పత్రాన్ని విశ్లేషించలేకపోయాం:",
         "save_timeline": "💾 టైమ్‌లైన్‌కు సేవ్ చేయండి", "saved_success": "నివేదిక టైమ్‌లైన్‌లో సేవ్ అయింది.",
         "timeline_title": "🕒 ఆరోగ్య టైమ్‌లైన్", "timeline_empty": "ఇంకా చరిత్ర లేదు. మొదటి పత్రాన్ని అప్‌లోడ్ చేయండి.",
@@ -171,7 +171,7 @@ STRINGS = {
         "your_treatment": "💊 ಇತ್ತೀಚಿನ ವರದಿಯ ಔಷಧಿಗಳು", "treatment_empty": "ಉಳಿಸಿದ ಔಷಧ ಚೀಟಿಯ ಔಷಧಿಗಳು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ.",
         "from": "ದಾಖಲೆಯ ದಿನಾಂಕ:", "cal_blue": "ಗುರುತಿಸಿದ ದಿನಾಂಕಗಳಲ್ಲಿ ದಾಖಲೆಗಳಿವೆ.",
         "upload_title": "ವರದಿಯನ್ನು ವಿಶ್ಲೇಷಿಸಿ", "upload_label": "ಔಷಧ ಚೀಟಿ ಅಥವಾ ಲ್ಯಾಬ್ ವರದಿ (JPG, PNG, PDF)",
-        "analyze_btn": "✨ ದಾಖಲೆಯನ್ನು ವಿಶ್ಲೇಷಿಸಿ", "api_key_err": "ಸೈಡ್‌ಬಾರ್‌ನಲ್ಲಿ Gemini API ಕೀ ನಮೂದಿಸಿ.",
+        "analyze_btn": "✨ ದಾಖಲೆಯನ್ನು ವಿಶ್ಲೇಷಿಸಿ", "api_key_err": "AI ಸೇವೆಯನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿಲ್ಲ. ದಯವಿಟ್ಟು Cura AI ತಂಡವನ್ನು ಸಂಪರ್ಕಿಸಿ.",
         "reading_doc": "ದಾಖಲೆಯನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ…", "read_err": "ದಾಖಲೆಯನ್ನು ವಿಶ್ಲೇಷಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ:",
         "save_timeline": "💾 ಟೈಮ್‌ಲೈನ್‌ಗೆ ಉಳಿಸಿ", "saved_success": "ವರದಿಯನ್ನು ಟೈಮ್‌ಲೈನ್‌ಗೆ ಉಳಿಸಲಾಗಿದೆ.",
         "timeline_title": "🕒 ಆರೋಗ್ಯ ಟೈಮ್‌ಲೈನ್", "timeline_empty": "ಇನ್ನೂ ಇತಿಹಾಸವಿಲ್ಲ. ಮೊದಲು ದಾಖಲೆಯನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
@@ -190,6 +190,66 @@ STRINGS = {
         "inspect": "🔍 ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಿ", "delete": "ಉಳಿಸಿದ ವರದಿಯನ್ನು ಅಳಿಸಿ",
     },
 }
+
+STRINGS["TAMIL"] = {
+    "disclaimer": "Cura AI மருத்துவ ஆவணங்களை எளிய மொழியில் விளக்குகிறது. இது மருத்துவர் அல்ல; நோயைக் கண்டறியாது, சிகிச்சையையும் பரிந்துரைக்காது. மருத்துவ முடிவுகளுக்கு தகுதியான மருத்துவரை அணுகவும்.",
+    "brand": "🩺 Cura AI", "tagline": "✨ உங்கள் பன்மொழி ஆரோக்கிய துணை",
+    "signin_caption": "உங்கள் சுகாதார அறிக்கைகளைப் பார்க்கவும் ஒழுங்கமைக்கவும் உள்நுழைக.",
+    "login": "உள்நுழை", "create_account": "கணக்கை உருவாக்கு", "username": "பயனர் பெயர்",
+    "password": "கடவுச்சொல்", "choose_username": "பயனர் பெயரைத் தேர்ந்தெடுக்கவும்",
+    "choose_password": "கடவுச்சொல் (குறைந்தது 6 எழுத்துகள்)", "mock_abha": "ABHA ID (டெமோ)",
+    "wrong_login": "பயனர் பெயர் அல்லது கடவுச்சொல் தவறானது.",
+    "validation_err": "பயனர் பெயர் குறைந்தது 3 எழுத்துகளும், கடவுச்சொல் குறைந்தது 6 எழுத்துகளும் இருக்க வேண்டும்.",
+    "user_taken": "இந்த பயனர் பெயர் ஏற்கனவே உள்ளது.", "menu_dashboard": "🏠 டாஷ்போர்டு",
+    "menu_upload": "📄 அறிக்கையைப் பதிவேற்று", "menu_timeline": "🕒 காலவரிசை",
+    "menu_details": "👤 என் விவரங்கள்", "summary_lang": "மொழி", "gemini_key": "Gemini API விசை",
+    "logout": "வெளியேறு", "demo_notice": "🌱 டெமோ பயன்முறை: சோதனைக்கு மாதிரி பதிவுகளைப் பயன்படுத்தவும்.",
+    "hello": "வணக்கம், வருக", "saved_reports": "சுகாதார அறிக்கைகள் சேமிக்கப்பட்டன",
+    "test_trends": "📊 பரிசோதனை போக்குகள்",
+    "trend_empty": "போக்குகளைப் பார்க்க ஆய்வக அறிக்கையைப் பதிவேற்றி சேமிக்கவும்.",
+    "trend_hint": "ஒப்பிட மேலும் அறிக்கைகளைச் சேமிக்கவும்.",
+    "weight": "எடை", "height": "உயரம்", "age": "வயது", "bmi": "BMI",
+    "add_details_hint": "BMI கணக்கிட, என் விவரங்களில் வயது, உயரம், எடையை உள்ளிடவும்.",
+    "questions_for_doc": "💬 மருத்துவரிடம் கேட்க வேண்டிய கேள்விகள்",
+    "questions_empty": "அறிக்கையைச் சேமித்தவுடன் கேள்விகள் தோன்றும்.",
+    "your_treatment": "💊 சமீபத்திய அறிக்கையில் உள்ள மருந்துகள்",
+    "treatment_empty": "சேமித்த மருந்துச் சீட்டுகளின் மருந்துகள் இங்கே தோன்றும்.",
+    "from": "ஆவண தேதி:", "cal_blue": "குறிக்கப்பட்ட தேதிகளில் ஆவணங்கள் சேமிக்கப்பட்டுள்ளன.",
+    "upload_title": "அறிக்கையை ஸ்கேன் செய்து பகுப்பாய்வு செய்",
+    "upload_label": "மருந்துச் சீட்டு அல்லது ஆய்வக அறிக்கை (JPG, PNG, PDF)",
+    "analyze_btn": "✨ ஆவணத்தைப் பகுப்பாய்வு செய்",
+    "api_key_err": "AI சேவை கட்டமைக்கப்படவில்லை. தயவுசெய்து Cura AI குழுவைத் தொடர்பு கொள்ளவும்.",
+    "reading_doc": "ஆவணம் பகுப்பாய்வு செய்யப்படுகிறது…", "read_err": "ஆவணத்தைப் பகுப்பாய்வு செய்ய முடியவில்லை:",
+    "save_timeline": "💾 காலவரிசையில் சேமி", "saved_success": "அறிக்கை காலவரிசையில் சேமிக்கப்பட்டது.",
+    "timeline_title": "🕒 சுகாதார காலவரிசை", "timeline_empty": "இன்னும் வரலாறு இல்லை. முதல் ஆவணத்தைப் பதிவேற்றவும்.",
+    "details_title": "👤 சுகாதார சுயவிவரம்", "details_saved": "சுயவிவரம் புதுப்பிக்கப்பட்டது.",
+    "details_caption": "இந்த விவரங்கள் சூழலுக்காக மட்டுமே; மருத்துவரின் மதிப்பீட்டுக்கு மாற்றல்ல.",
+    "first_name": "முதல் பெயர்", "last_name": "குடும்பப் பெயர்", "age_label": "வயது (ஆண்டுகள்)",
+    "gender_label": "பாலினம்", "height_label": "உயரம் (செ.மீ)", "weight_label": "எடை (கிலோ)",
+    "waist_label": "இடுப்பு (செ.மீ), விருப்பத்திற்குரியது", "save_details_btn": "விவரங்களைச் சேமி",
+    "required_err": "முதல் பெயர், வயது, உயரம், எடையை உள்ளிடவும்.", "summary": "மருத்துவ சுருக்கம்",
+    "no_summary": "சுருக்கம் இல்லை.", "diagnoses_mentioned": "குறிப்பிடப்பட்டவை:",
+    "medicines": "மருந்துகள்", "test_results": "பரிசோதனை முடிவுகள்", "qa_title": "🌱 எளிய மொழியில் பதில்கள்",
+    "qa_caption": "பொதுவான தகவல்; மருத்துவரிடம் உறுதிப்படுத்தவும்.",
+    "more_questions": "மருத்துவரிடம் கேட்க வேண்டிய கேள்விகள்",
+    "no_findings": "பகுப்பாய்வில் அதிக/குறைந்த குறிப்புகள் இல்லை",
+    "bmi_note_intro": "உங்கள் அளவீடுகளின் அடிப்படையிலான BMI குறிப்பு:",
+    "female": "பெண்", "male": "ஆண்", "other": "மற்றவை", "prefer_not": "சொல்ல விரும்பவில்லை",
+    "open_modal": "🔍 முழு அறிக்கையைத் திற", "quick_edit": "✏️ அளவீடுகளைத் திருத்து",
+    "inspect": "🔍 விவரங்களைப் பார்", "delete": "சேமித்த அறிக்கையை நீக்கு",
+}
+
+# Strings for the FHIR export feature (all languages)
+_EXPORT_STRINGS = {
+    "ENGLISH": {"export_fhir": "⬇️ Export FHIR (JSON)", "export_all": "⬇️ Export all records (FHIR bundle)"},
+    "HINDI": {"export_fhir": "⬇️ FHIR निर्यात (JSON)", "export_all": "⬇️ सभी रिकॉर्ड निर्यात करें (FHIR)"},
+    "TELUGU": {"export_fhir": "⬇️ FHIR ఎగుమతి (JSON)", "export_all": "⬇️ అన్ని రికార్డులను ఎగుమతి చేయండి (FHIR)"},
+    "TAMIL": {"export_fhir": "⬇️ FHIR ஏற்றுமதி (JSON)", "export_all": "⬇️ அனைத்து பதிவுகளையும் ஏற்றுமதி செய் (FHIR)"},
+    "KANNADA": {"export_fhir": "⬇️ FHIR ರಫ್ತು (JSON)", "export_all": "⬇️ ಎಲ್ಲಾ ದಾಖಲೆಗಳನ್ನು ರಫ್ತು ಮಾಡಿ (FHIR)"},
+}
+for _lang, _vals in _EXPORT_STRINGS.items():
+    STRINGS[_lang].update(_vals)
+
 
 def t(key):
     lang = st.session_state.get("selected_language", "ENGLISH")
@@ -343,6 +403,126 @@ def delete_record(profile, record_id):
     with db() as con:
         con.execute("DELETE FROM records WHERE id=? AND profile=?", (record_id, profile))
 
+# -------------------- FHIR-style export --------------------
+ABHA_SYSTEM = "https://healthid.ndhm.gov.in"
+INTERPRETATION = {"high": ("H", "High"), "low": ("L", "Low"), "normal": ("N", "Normal")}
+
+def fhir_gender(value):
+    """Map the (possibly translated) gender label saved in the profile to a FHIR code."""
+    text = (value or "").strip().lower()
+    for lang in STRINGS.values():
+        for key in ("female", "male", "other"):
+            if text and text == lang.get(key, "").strip().lower():
+                return key
+    return "unknown"
+
+def _fhir_patient(username, abha, details):
+    patient = {
+        "resourceType": "Patient",
+        "id": f"patient-{username}",
+        "identifier": [{
+            "system": ABHA_SYSTEM,
+            "value": abha or "not-provided",
+            "type": {"text": "ABHA ID (mock, for demonstration)"},
+        }],
+        "gender": fhir_gender(details.get("gender")),
+    }
+    name = {"use": "official"}
+    if details.get("first_name"):
+        name["given"] = [details["first_name"]]
+    if details.get("last_name"):
+        name["family"] = details["last_name"]
+    patient["name"] = [name if len(name) > 1 else {"text": username}]
+    return patient
+
+def _fhir_record_resources(patient_ref, record):
+    """Convert one saved report into FHIR-style resources."""
+    data = record.get("data") or {}
+    rid = str(record.get("id") or uuid.uuid4())
+    day = record.get("date") or str(date.today())
+    resources, observation_refs = [], []
+
+    for i, test in enumerate(data.get("tests") or []):
+        if not isinstance(test, dict) or not test.get("name"):
+            continue
+        obs_id = f"{rid}-obs-{i}"
+        obs = {
+            "resourceType": "Observation", "id": obs_id, "status": "final",
+            "category": [{"coding": [{
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"}]}],
+            "code": {"text": str(test["name"])},
+            "subject": {"reference": patient_ref},
+            "effectiveDateTime": day,
+        }
+        number = to_num(test.get("value"))
+        if number is not None:
+            quantity = {"value": number}
+            if test.get("unit"):
+                quantity["unit"] = str(test["unit"])
+            obs["valueQuantity"] = quantity
+        elif test.get("value"):
+            obs["valueString"] = str(test["value"])
+        if test.get("reference_range"):
+            obs["referenceRange"] = [{"text": str(test["reference_range"])}]
+        flag = INTERPRETATION.get(str(test.get("flag", "")).lower())
+        if flag:
+            obs["interpretation"] = [{"coding": [{
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": flag[0], "display": flag[1]}]}]
+        resources.append(obs)
+        observation_refs.append({"reference": f"Observation/{obs_id}"})
+
+    for i, med in enumerate(data.get("medicines") or []):
+        if not isinstance(med, dict) or not med.get("name"):
+            continue
+        instruction = " ".join(str(med.get(k)) for k in ("dose", "frequency", "duration") if med.get(k))
+        request = {
+            "resourceType": "MedicationRequest", "id": f"{rid}-med-{i}",
+            "status": "active", "intent": "order",
+            "medicationCodeableConcept": {"text": str(med["name"])},
+            "subject": {"reference": patient_ref}, "authoredOn": day,
+        }
+        if instruction:
+            request["dosageInstruction"] = [{"text": instruction}]
+        resources.append(request)
+
+    for i, diagnosis in enumerate(data.get("diagnoses") or []):
+        resources.append({
+            "resourceType": "Condition", "id": f"{rid}-cond-{i}",
+            "code": {"text": str(diagnosis)},
+            "subject": {"reference": patient_ref}, "recordedDate": day,
+        })
+
+    report = {
+        "resourceType": "DiagnosticReport", "id": f"{rid}-report", "status": "final",
+        "code": {"text": str(record.get("type") or data.get("document_type") or "other").replace("_", " ")},
+        "subject": {"reference": patient_ref}, "effectiveDateTime": day,
+        "conclusion": str(data.get("summary") or ""),
+    }
+    if data.get("doctor_or_lab"):
+        report["performer"] = [{"display": str(data["doctor_or_lab"])}]
+    if observation_refs:
+        report["result"] = observation_refs
+    resources.append(report)
+    return resources
+
+def to_fhir_bundle(username, abha, details, records):
+    """Build a FHIR-style Bundle (JSON string) for one or more saved reports.
+    Demonstration export: structured like FHIR R4 but not validated against a FHIR server."""
+    patient = _fhir_patient(username, abha, details or {})
+    patient_ref = f"Patient/{patient['id']}"
+    entries = [{"resource": patient}]
+    for record in records:
+        entries.extend({"resource": r} for r in _fhir_record_resources(patient_ref, record))
+    bundle = {
+        "resourceType": "Bundle", "type": "collection",
+        "timestamp": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "meta": {"tag": [{"display": "FHIR-style demo export generated by Cura AI; mock ABHA ID"}]},
+        "entry": entries,
+    }
+    return json.dumps(bundle, ensure_ascii=False, indent=2)
+
 # -------------------- Gemini AI --------------------
 def server_key():
     key = os.getenv("GEMINI_API_KEY", "").strip()
@@ -354,7 +534,9 @@ def server_key():
         return ""
 
 def api_key():
-    return server_key() or st.session_state.get("key", "").strip()
+    # The key is configured on the server (environment variable or Streamlit secrets).
+    # Users are never asked to enter one.
+    return server_key()
 
 def context(me):
     if me and me.get("age"):
