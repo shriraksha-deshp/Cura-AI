@@ -1,12 +1,9 @@
 import calendar
-import functools
 import hashlib
 import hmac
 import html
 import json
-import math
 import os
-import random
 import secrets
 import sqlite3
 import time
@@ -24,17 +21,8 @@ from google.genai import types
 # ============================================================
 
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
-# If the main model is overloaded (503) or unavailable (404), these are tried in order.
-FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-flash-lite"]
 DB = os.getenv("DB_PATH", "records.db")
 LANG_OPTIONS = ["ENGLISH", "HINDI", "TELUGU", "TAMIL", "KANNADA"]
-MAX_UPLOAD_BYTES = 18 * 1024 * 1024  # Gemini inline-file limit is ~20 MB
-
-# Demo account for judges (README: demo / demo1234). Re-created automatically if the
-# database was wiped (Streamlit Cloud can reset local files when the app restarts).
-DEMO_USER = "demo"
-DEMO_PASSWORD = "demo1234"
-DEMO_ABHA = "91-1234-5678-9012"  # mock value for demonstration
 
 STRINGS = {
     "ENGLISH": {
@@ -262,64 +250,6 @@ _EXPORT_STRINGS = {
 for _lang, _vals in _EXPORT_STRINGS.items():
     STRINGS[_lang].update(_vals)
 
-# Friendly messages shown when the AI service is overloaded or returns unreadable output
-_AI_STRINGS = {
-    "ENGLISH": {
-        "ai_busy": "The AI service is busy right now. Please wait a minute and try again.",
-        "ai_bad_output": "The AI returned an unreadable result. Please try again.",
-        "file_empty": "The uploaded file is empty.",
-        "file_too_large": "The file is too large. Please upload a file smaller than 18 MB.",
-    },
-    "HINDI": {
-        "ai_busy": "AI सेवा अभी व्यस्त है। कृपया एक मिनट प्रतीक्षा करके फिर कोशिश करें।",
-        "ai_bad_output": "AI का परिणाम पढ़ने योग्य नहीं था। कृपया फिर कोशिश करें।",
-        "file_empty": "अपलोड की गई फ़ाइल खाली है।",
-        "file_too_large": "फ़ाइल बहुत बड़ी है। कृपया 18 MB से छोटी फ़ाइल अपलोड करें।",
-    },
-    "TELUGU": {
-        "ai_busy": "AI సేవ ప్రస్తుతం బిజీగా ఉంది. దయచేసి ఒక నిమిషం వేచి మళ్లీ ప్రయత్నించండి.",
-        "ai_bad_output": "AI ఫలితం చదవడానికి వీలుగా లేదు. దయచేసి మళ్లీ ప్రయత్నించండి.",
-        "file_empty": "అప్‌లోడ్ చేసిన ఫైల్ ఖాళీగా ఉంది.",
-        "file_too_large": "ఫైల్ చాలా పెద్దది. దయచేసి 18 MB కంటే చిన్న ఫైల్‌ను అప్‌లోడ్ చేయండి.",
-    },
-    "TAMIL": {
-        "ai_busy": "AI சேவை தற்போது பிஸியாக உள்ளது. ஒரு நிமிடம் காத்திருந்து மீண்டும் முயற்சிக்கவும்.",
-        "ai_bad_output": "AI முடிவு படிக்க முடியாததாக இருந்தது. மீண்டும் முயற்சிக்கவும்.",
-        "file_empty": "பதிவேற்றிய கோப்பு காலியாக உள்ளது.",
-        "file_too_large": "கோப்பு மிகப் பெரியது. 18 MB க்கும் சிறிய கோப்பைப் பதிவேற்றவும்.",
-    },
-    "KANNADA": {
-        "ai_busy": "AI ಸೇವೆ ಈಗ ಬ್ಯುಸಿಯಾಗಿದೆ. ದಯವಿಟ್ಟು ಒಂದು ನಿಮಿಷ ಕಾದು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
-        "ai_bad_output": "AI ಫಲಿತಾಂಶ ಓದಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
-        "file_empty": "ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ಫೈಲ್ ಖಾಲಿಯಾಗಿದೆ.",
-        "file_too_large": "ಫೈಲ್ ತುಂಬಾ ದೊಡ್ಡದಾಗಿದೆ. ದಯವಿಟ್ಟು 18 MB ಗಿಂತ ಚಿಕ್ಕ ಫೈಲ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
-    },
-}
-for _lang, _vals in _AI_STRINGS.items():
-    STRINGS[_lang].update(_vals)
-
-
-def _drop_removed_kwargs(fn):
-    """Newer Streamlit versions removed `use_container_width`; retry without it if needed."""
-    if getattr(fn, "_cura_compat", False):
-        return fn
-
-    @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except TypeError:
-            if "use_container_width" not in kwargs:
-                raise
-            kwargs.pop("use_container_width")
-            return fn(*args, **kwargs)
-
-    wrapper._cura_compat = True
-    return wrapper
-
-for _name in ("button", "download_button", "dataframe"):
-    setattr(st, _name, _drop_removed_kwargs(getattr(st, _name)))
-
 
 def t(key):
     lang = st.session_state.get("selected_language", "ENGLISH")
@@ -352,28 +282,6 @@ Rules:
 """
 
 # -------------------- Database --------------------
-def hash_pw(password, salt):
-    return hashlib.pbkdf2_hmac(
-        "sha256", password.encode("utf-8"), bytes.fromhex(salt), 200_000
-    ).hex()
-
-def _ensure_demo_user(con):
-    """Make sure the judges' demo account exists (it is lost if the database file is reset)."""
-    exists = con.execute("SELECT 1 FROM users WHERE username=?", (DEMO_USER,)).fetchone()
-    if exists:
-        return
-    salt = secrets.token_hex(16)
-    con.execute(
-        "INSERT INTO users(username,salt,pw_hash,abha) VALUES (?,?,?,?)",
-        (DEMO_USER, salt, hash_pw(DEMO_PASSWORD, salt), DEMO_ABHA)
-    )
-    con.execute(
-        """INSERT OR IGNORE INTO details
-           (username,first_name,last_name,age,gender,height_cm,weight_kg,waist_cm)
-           VALUES (?,?,?,?,?,?,?,?)""",
-        (DEMO_USER, "Demo", "User", 28, "Male", 170, 70.0, 80.0)
-    )
-
 def db():
     con = sqlite3.connect(DB, timeout=15)
     con.row_factory = sqlite3.Row
@@ -411,12 +319,15 @@ def db():
     for col in ("weight_kg", "waist_cm"):
         if col not in cols:
             con.execute(f"ALTER TABLE details ADD COLUMN {col} REAL")
-    _ensure_demo_user(con)
     con.commit()
     return con
 
+def hash_pw(password, salt):
+    return hashlib.pbkdf2_hmac(
+        "sha256", password.encode("utf-8"), bytes.fromhex(salt), 200_000
+    ).hex()
+
 def create_user(username, password, abha):
-    username = (username or "").strip()
     with db() as con:
         exists = con.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone()
         if exists:
@@ -424,17 +335,16 @@ def create_user(username, password, abha):
         salt = secrets.token_hex(16)
         con.execute(
             "INSERT INTO users(username,salt,pw_hash,abha) VALUES (?,?,?,?)",
-            (username, salt, hash_pw(password or "", salt), (abha or "").strip())
+            (username, salt, hash_pw(password, salt), abha.strip())
         )
     return True
 
 def check_login(username, password):
-    username = (username or "").strip()
     with db() as con:
         row = con.execute(
             "SELECT salt,pw_hash,abha FROM users WHERE username=?", (username,)
         ).fetchone()
-    if row and hmac.compare_digest(hash_pw(password or "", row["salt"]), row["pw_hash"]):
+    if row and hmac.compare_digest(hash_pw(password, row["salt"]), row["pw_hash"]):
         return row["abha"] or ""
     return None
 
@@ -468,7 +378,7 @@ def save_record(profile, data):
     with db() as con:
         con.execute(
             "INSERT INTO records(id,profile,doc_date,doc_type,data) VALUES (?,?,?,?,?)",
-            (str(uuid.uuid4()), profile, str(doc_date), doc_type, json.dumps(data, ensure_ascii=False))
+            (str(uuid.uuid4()), profile, doc_date, doc_type, json.dumps(data, ensure_ascii=False))
         )
 
 def load_records(profile):
@@ -482,8 +392,6 @@ def load_records(profile):
         try:
             data = json.loads(row["data"])
         except (json.JSONDecodeError, TypeError):
-            data = {}
-        if not isinstance(data, dict):
             data = {}
         results.append({
             "id": row["id"], "date": row["doc_date"] or "",
@@ -534,7 +442,7 @@ def _fhir_record_resources(patient_ref, record):
     day = record.get("date") or str(date.today())
     resources, observation_refs = [], []
 
-    for i, test in enumerate(_as_list(data.get("tests"))):
+    for i, test in enumerate(data.get("tests") or []):
         if not isinstance(test, dict) or not test.get("name"):
             continue
         obs_id = f"{rid}-obs-{i}"
@@ -565,7 +473,7 @@ def _fhir_record_resources(patient_ref, record):
         resources.append(obs)
         observation_refs.append({"reference": f"Observation/{obs_id}"})
 
-    for i, med in enumerate(_as_list(data.get("medicines"))):
+    for i, med in enumerate(data.get("medicines") or []):
         if not isinstance(med, dict) or not med.get("name"):
             continue
         instruction = " ".join(str(med.get(k)) for k in ("dose", "frequency", "duration") if med.get(k))
@@ -579,7 +487,7 @@ def _fhir_record_resources(patient_ref, record):
             request["dosageInstruction"] = [{"text": instruction}]
         resources.append(request)
 
-    for i, diagnosis in enumerate(_as_list(data.get("diagnoses"))):
+    for i, diagnosis in enumerate(data.get("diagnoses") or []):
         resources.append({
             "resourceType": "Condition", "id": f"{rid}-cond-{i}",
             "code": {"text": str(diagnosis)},
@@ -638,132 +546,38 @@ def context(me):
         )
     return ""
 
-# ---- Retry + fallback for temporary Gemini errors (503 "high demand", 429, 5xx) ----
-RETRYABLE_CODES = {408, 429, 500, 502, 503, 504}
-
-def model_chain():
-    """Main model first, then the fallbacks (duplicates removed)."""
-    chain = []
-    for name in [MODEL] + FALLBACK_MODELS:
-        name = (name or "").strip()
-        if name and name not in chain:
-            chain.append(name)
-    return chain
-
-def _error_code(error):
-    for attr in ("code", "status_code"):
-        value = getattr(error, attr, None)
-        if isinstance(value, int):
-            return value
-    return None
-
-def _is_network_error(error):
-    name = type(error).__name__.lower()
-    return any(word in name for word in ("timeout", "connect", "network", "remoteprotocol", "readerror"))
-
-def generate_with_retry(client, contents, config=None, max_attempts=3):
-    """Call Gemini with automatic retries and backup models.
-
-    - Temporary errors (503, 429, 5xx, network) are retried with growing waits.
-    - If a model is unavailable (404) or stays overloaded, the next model is tried.
-    - Real errors (invalid key, bad input) are raised immediately.
-    """
-    last_error = None
-    for model in model_chain():
-        for attempt in range(max_attempts):
-            try:
-                return client.models.generate_content(
-                    model=model, contents=contents, config=config
-                )
-            except Exception as error:
-                last_error = error
-                code = _error_code(error)
-                if code == 404:  # model not available -> try the next one
-                    break
-                if code in RETRYABLE_CODES or (code is None and _is_network_error(error)):
-                    if attempt < max_attempts - 1:
-                        time.sleep(2 ** (attempt + 1) + random.random())
-                    continue
-                raise
-    raise RuntimeError(t("ai_busy")) from last_error
-
-def parse_json_response(raw):
-    start, end = raw.find("{"), raw.rfind("}")
-    if start < 0 or end < start:
-        raise ValueError("Gemini did not return a valid JSON object.")
-    data = json.loads(raw[start:end + 1])
-    if not isinstance(data, dict):
-        raise ValueError("Gemini did not return a JSON object.")
-    return data
-
-def _as_list(value):
-    return value if isinstance(value, list) else []
-
-def _text(value):
-    return "" if value is None else str(value).strip()
-
-def normalize_result(data):
-    """Make the AI output safe for the UI, database and FHIR export, whatever it returned."""
-    def clean_rows(name, fields):
-        rows = []
-        for item in _as_list(data.get(name)):
-            if isinstance(item, dict):
-                row = {field: _text(item.get(field)) for field in fields}
-                if any(row.values()):
-                    rows.append(row)
-        return rows
-
-    def clean_strings(name):
-        return [_text(x) for x in _as_list(data.get(name)) if _text(x)]
-
-    tests = clean_rows("tests", ("name", "value", "unit", "reference_range", "flag"))
-    for row in tests:
-        flag = row["flag"].lower()
-        row["flag"] = flag if flag in ("normal", "high", "low", "unknown") else "unknown"
-
-    document_date = data.get("document_date")
-    return {
-        "document_type": _text(data.get("document_type")) or "other",
-        "document_date": _text(document_date) or None,
-        "doctor_or_lab": _text(data.get("doctor_or_lab")) or None,
-        "diagnoses": clean_strings("diagnoses"),
-        "medicines": clean_rows("medicines", ("name", "dose", "frequency", "duration")),
-        "tests": tests,
-        "summary": _text(data.get("summary")),
-        "abnormal_explanations": clean_rows("abnormal_explanations", ("item", "meaning")),
-        "questions_for_doctor": clean_strings("questions_for_doctor"),
-        "question_answers": clean_rows("question_answers", ("question", "answer")),
-    }
-
 def analyze(uploaded_file, lang, me=None):
     key = api_key()
     if not key:
         raise RuntimeError("Gemini API key is missing.")
-    file_bytes = uploaded_file.getvalue()
-    if not file_bytes:
-        raise ValueError(t("file_empty"))
-    if len(file_bytes) > MAX_UPLOAD_BYTES:
-        raise ValueError(t("file_too_large"))
-
     client = genai.Client(api_key=key)
     file_part = types.Part.from_bytes(
-        data=file_bytes,
+        data=uploaded_file.getvalue(),
         mime_type=uploaded_file.type or "application/octet-stream"
     )
-    contents = [file_part, PROMPT.replace("{lang}", lang) + context(me)]
-    config = types.GenerateContentConfig(
-        response_mime_type="application/json",
-        temperature=0.1
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=[file_part, PROMPT.replace("{lang}", lang) + context(me)],
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            temperature=0.1
+        )
     )
-
-    last_error = None
-    for _ in range(2):  # a second try if the AI returns broken JSON
-        response = generate_with_retry(client, contents, config)
-        try:
-            return normalize_result(parse_json_response(response.text or ""))
-        except ValueError as error:  # includes json.JSONDecodeError
-            last_error = error
-    raise ValueError(t("ai_bad_output")) from last_error
+    raw = response.text or ""
+    start, end = raw.find("{"), raw.rfind("}")
+    if start < 0 or end < start:
+        raise ValueError("Gemini did not return a valid JSON object.")
+    data = json.loads(raw[start:end + 1])
+    # Normalize expected keys so UI rendering is resilient to incomplete responses.
+    data.setdefault("document_type", "other")
+    data.setdefault("document_date", None)
+    data.setdefault("doctor_or_lab", None)
+    for key_name in ("diagnoses", "medicines", "tests", "abnormal_explanations",
+                     "questions_for_doctor", "question_answers"):
+        if not isinstance(data.get(key_name), list):
+            data[key_name] = []
+    data.setdefault("summary", "")
+    return data
 
 def to_num(value):
     if value is None:
@@ -772,8 +586,7 @@ def to_num(value):
         cleaned = str(value).replace(",", "").strip()
         if not cleaned:
             return None
-        number = float(cleaned)
-        return number if math.isfinite(number) else None
+        return float(cleaned)
     except (ValueError, TypeError):
         return None
 
@@ -781,7 +594,7 @@ def to_num(value):
 def has_findings(data):
     flagged = any(
         isinstance(item, dict) and str(item.get("flag", "")).lower() in ("high", "low")
-        for item in _as_list(data.get("tests"))
+        for item in data.get("tests", [])
     )
     return flagged or bool(data.get("abnormal_explanations"))
 
@@ -816,78 +629,38 @@ def show_bmi(me):
         st.metric(f"⚖️ {t('bmi')}", f"{bmi:.1f}")
     {"ok": st.success, "warn": st.warning, "info": st.info}[level](message)
 
-def _rows(items):
-    """Turn saved list data into table rows with text-only cells (avoids table type errors)."""
-    rows = []
-    for item in _as_list(items):
-        if isinstance(item, dict):
-            rows.append({str(k): ("" if v is None else str(v)) for k, v in item.items()})
-        elif item:
-            rows.append({"name": str(item)})
-    return rows
-
-def _table(rows):
-    frame = pd.DataFrame(rows)
-    try:
-        st.dataframe(frame, use_container_width=True, hide_index=True)
-    except TypeError:  # newer Streamlit versions removed use_container_width
-        st.dataframe(frame, hide_index=True)
-
-def _wide_button(label, **kwargs):
-    try:
-        return st.button(label, use_container_width=True, **kwargs)
-    except TypeError:  # newer Streamlit versions removed use_container_width
-        return st.button(label, **kwargs)
-
-GENDER_KEYS = ["female", "male", "other", "prefer_not"]
-
-def gender_default_index(saved):
-    """Index of the saved gender in the selectbox, even if it was saved in another language."""
-    text = (saved or "").strip().lower()
-    for i, key in enumerate(GENDER_KEYS):
-        if text and any(text == lang.get(key, "").strip().lower() for lang in STRINGS.values()):
-            return i
-    return 0
-
-def _clamp(value, low, high, default):
-    try:
-        number = float(value)
-    except (TypeError, ValueError):
-        return default
-    return min(max(number, low), high)
-
 def show_report(data, key_prefix="report"):
     st.subheader(f"✨ {t('summary')}")
     st.write(data.get("summary") or t("no_summary"))
 
-    diagnoses = [str(d) for d in _as_list(data.get("diagnoses")) if d]
+    diagnoses = data.get("diagnoses") or []
     if diagnoses:
-        st.markdown(f"**🫀 {t('diagnoses_mentioned')}** " + ", ".join(diagnoses))
+        st.markdown(f"**🫀 {t('diagnoses_mentioned')}** " + ", ".join(map(str, diagnoses)))
 
-    medicines = _rows(data.get("medicines"))
-    tests = _rows(data.get("tests"))
+    medicines = data.get("medicines") or []
+    tests = data.get("tests") or []
     col1, col2 = st.columns(2)
     with col1:
         if medicines:
             st.markdown(f"#### 💊 {t('medicines')}")
-            _table(medicines)
+            st.dataframe(pd.DataFrame(medicines), use_container_width=True, hide_index=True)
     with col2:
         if tests:
             st.markdown(f"#### 🧪 {t('test_results')}")
-            _table(tests)
+            st.dataframe(pd.DataFrame(tests), use_container_width=True, hide_index=True)
 
-    for item in _as_list(data.get("abnormal_explanations")):
+    for i, item in enumerate(data.get("abnormal_explanations") or []):
         if isinstance(item, dict):
             st.warning(f"**{item.get('item', 'Finding')}**: {item.get('meaning', '')}")
 
     qa = [
-        item for item in _as_list(data.get("question_answers"))
+        item for item in (data.get("question_answers") or [])
         if isinstance(item, dict) and item.get("question") and item.get("answer")
     ]
     if qa:
         st.markdown(f"#### 💬 {t('qa_title')}")
         st.caption(t("qa_caption"))
-        for item in qa:
+        for i, item in enumerate(qa):
             with st.expander(f"❓ {item['question']}", expanded=False):
                 st.write(item["answer"])
     st.caption(f"🛡️ {t('disclaimer')}")
@@ -901,13 +674,15 @@ def quick_edit_dialog(username, details):
     c1, c2 = st.columns(2)
     first = c1.text_input(t("first_name"), value=details.get("first_name") or "", key="quick_first")
     last = c2.text_input(t("last_name"), value=details.get("last_name") or "", key="quick_last")
-    age = c1.number_input(t("age_label"), 0, 120, int(_clamp(details.get("age"), 0, 120, 20)), key="quick_age")
-    genders = [t(k) for k in GENDER_KEYS]
-    gender = c2.selectbox(t("gender_label"), genders, index=gender_default_index(details.get("gender")), key="quick_gender")
-    height = c1.number_input(t("height_label"), 50, 250, int(_clamp(details.get("height_cm"), 50, 250, 170)), key="quick_height")
-    weight = c2.number_input(t("weight_label"), 10.0, 300.0, float(_clamp(details.get("weight_kg"), 10.0, 300.0, 70.0)), step=0.5, key="quick_weight")
-    waist = c1.number_input(t("waist_label"), 30.0, 200.0, float(_clamp(details.get("waist_cm"), 30.0, 200.0, 80.0)), step=0.5, key="quick_waist")
-    if _wide_button("✨ Save measurements", type="primary", key="quick_save"):
+    age = c1.number_input(t("age_label"), 0, 120, int(details.get("age") or 20), key="quick_age")
+    genders = [t("female"), t("male"), t("other"), t("prefer_not")]
+    old_gender = details.get("gender")
+    gender_index = genders.index(old_gender) if old_gender in genders else 0
+    gender = c2.selectbox(t("gender_label"), genders, index=gender_index, key="quick_gender")
+    height = c1.number_input(t("height_label"), 50, 250, int(details.get("height_cm") or 170), key="quick_height")
+    weight = c2.number_input(t("weight_label"), 10.0, 300.0, float(details.get("weight_kg") or 70.0), step=0.5, key="quick_weight")
+    waist = c1.number_input(t("waist_label"), 30.0, 200.0, float(details.get("waist_cm") or 80.0), step=0.5, key="quick_waist")
+    if st.button("✨ Save measurements", type="primary", use_container_width=True, key="quick_save"):
         if not first.strip():
             st.error(t("required_err"))
         else:
