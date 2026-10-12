@@ -20,7 +20,7 @@ from google.genai import types
 # Run: python -m streamlit run app.py
 # ============================================================
 
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 DB = os.getenv("DB_PATH", "records.db")
 LANG_OPTIONS = ["ENGLISH", "HINDI", "TELUGU", "TAMIL", "KANNADA"]
 
