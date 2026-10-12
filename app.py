@@ -3,17 +3,19 @@ Run with: python -m streamlit run app.py
 """
 from cura_core import *
 
-# Pre-create a demo account so evaluators can log in immediately, even after the
-# hosting platform restarts and wipes the database.
-DEMO_USER, DEMO_PASS = "demo", "demo1234"
+# The demo account (demo / demo1234) is created automatically by cura_core.db(), so
+# evaluators can log in immediately, even after the hosting platform restarts and wipes
+# the database.
 
-@st.cache_resource
-def seed_demo_account():
-    if create_user(DEMO_USER, DEMO_PASS, "91-1234-5678-9012"):
-        save_details(DEMO_USER, "Demo", "User", 28, "Male", 170, 70.0, 80.0)
-    return True
+def as_list(value):
+    return value if isinstance(value, list) else []
 
-seed_demo_account()
+def clamp(value, low, high, default):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return default
+    return min(max(number, low), high)
 
 # -------------------- UI theme --------------------
 CSS = """
@@ -125,7 +127,12 @@ menu_map = {
 with st.sidebar:
     st.markdown(f'<div class="brand">{t("brand")}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="tagline">{t("tagline")}</div>', unsafe_allow_html=True)
-    selected_page = st.radio("Menu", list(menu_map.values()), label_visibility="collapsed")
+    # Keys (not translated labels) are the radio options, so changing the language
+    # keeps the person on the same page.
+    selected_page = st.radio(
+        "Menu", list(menu_map.keys()), format_func=lambda k: menu_map[k],
+        label_visibility="collapsed", key="menu_page"
+    )
     st.divider()
     st.markdown(f"**👤 {html.escape(display_name)}**")
     st.caption(f"🪪 {t('mock_abha')}: `{html.escape(abha or 'Not provided')}`")
@@ -137,7 +144,7 @@ with st.sidebar:
         st.session_state["selected_language"] = lang
         st.rerun()
     if st.button(f"🚪 {t('logout')}", use_container_width=True):
-        for key in ("user", "abha", "result"):
+        for key in ("user", "abha", "result", "result_file_name", "menu_page"):
             st.session_state.pop(key, None)
         st.rerun()
     st.caption(t("demo_notice"))
@@ -186,14 +193,14 @@ def calendar_card(records):
         st.caption(t("cal_blue"))
 
 def treatment_card(records):
-    latest = next((r for r in reversed(records) if r["data"].get("medicines")), None)
+    latest = next((r for r in reversed(records) if as_list(r["data"].get("medicines"))), None)
     with st.container(key="card_medicines"):
         st.markdown(f"**{t('your_treatment')}**")
         if not latest:
             st.caption(t("treatment_empty"))
             return
         st.caption(f"{t('from')} {latest['date']}")
-        for medicine in latest["data"].get("medicines", [])[:5]:
+        for medicine in as_list(latest["data"].get("medicines"))[:5]:
             if not isinstance(medicine, dict):
                 continue
             detail = " · ".join(
@@ -225,15 +232,15 @@ def page_dashboard():
             st.markdown(f"**{t('test_trends')}**")
             test_names = sorted({
                 str(test.get("name")) for record in records
-                for test in record["data"].get("tests", [])
+                for test in as_list(record["data"].get("tests"))
                 if isinstance(test, dict) and test.get("name")
             })
             if test_names:
                 selected_test = st.selectbox("Test parameter", test_names, label_visibility="collapsed")
                 points = []
                 for record in records:
-                    for test in record["data"].get("tests", []):
-                        if isinstance(test, dict) and test.get("name") == selected_test:
+                    for test in as_list(record["data"].get("tests")):
+                        if isinstance(test, dict) and str(test.get("name")) == selected_test:
                             number = to_num(test.get("value"))
                             if number is not None:
                                 points.append((record["date"], number))
@@ -267,11 +274,11 @@ def page_dashboard():
 
         with st.container(key="card_questions"):
             st.markdown(f"**{t('questions_for_doc')}**")
-            latest = next((r for r in reversed(records) if r["data"].get("questions_for_doctor")), None)
+            latest = next((r for r in reversed(records) if as_list(r["data"].get("questions_for_doctor"))), None)
             if not latest:
                 st.caption(t("questions_empty"))
             else:
-                for index, question in enumerate(latest["data"]["questions_for_doctor"][:5]):
+                for index, question in enumerate(as_list(latest["data"].get("questions_for_doctor"))[:5]):
                     st.checkbox(str(question), key=f"question_{latest['id']}_{index}")
     with right:
         calendar_card(records)
@@ -321,7 +328,7 @@ def page_upload():
                     save_record(profile, result)
                     st.session_state.pop("result", None)
                     st.session_state.pop("result_file_name", None)
-                    st.success(t("saved_success"))
+                    st.toast(t("saved_success"), icon="✅")  # toast survives the rerun below
                     st.rerun()
                 except sqlite3.Error as exc:
                     st.error(f"Could not save the report: {exc}")
@@ -366,14 +373,12 @@ def page_details():
             c1, c2 = st.columns(2)
             first = c1.text_input(t("first_name"), value=me.get("first_name") or "")
             last = c2.text_input(t("last_name"), value=me.get("last_name") or "")
-            age = c1.number_input(t("age_label"), min_value=0, max_value=120, value=int(me.get("age") or 20), step=1)
-            genders = [t("female"), t("male"), t("other"), t("prefer_not")]
-            current_gender = me.get("gender")
-            gender_index = genders.index(current_gender) if current_gender in genders else 0
-            gender = c2.selectbox(t("gender_label"), genders, index=gender_index)
-            height = c1.number_input(t("height_label"), min_value=50, max_value=250, value=int(me.get("height_cm") or 170), step=1)
-            weight = c2.number_input(t("weight_label"), min_value=10.0, max_value=300.0, value=float(me.get("weight_kg") or 70.0), step=0.5)
-            waist = c1.number_input(t("waist_label"), min_value=30.0, max_value=200.0, value=float(me.get("waist_cm") or 80.0), step=0.5)
+            age = c1.number_input(t("age_label"), min_value=0, max_value=120, value=int(clamp(me.get("age"), 0, 120, 20)), step=1)
+            genders = [t(k) for k in GENDER_KEYS]
+            gender = c2.selectbox(t("gender_label"), genders, index=gender_default_index(me.get("gender")))
+            height = c1.number_input(t("height_label"), min_value=50, max_value=250, value=int(clamp(me.get("height_cm"), 50, 250, 170)), step=1)
+            weight = c2.number_input(t("weight_label"), min_value=10.0, max_value=300.0, value=float(clamp(me.get("weight_kg"), 10.0, 300.0, 70.0)), step=0.5)
+            waist = c1.number_input(t("waist_label"), min_value=30.0, max_value=200.0, value=float(clamp(me.get("waist_cm"), 30.0, 200.0, 80.0)), step=0.5)
             submitted = st.form_submit_button(f"✨ {t('save_details_btn')}", type="primary")
         if submitted:
             if not first.strip() or not 1 <= int(age) <= 120:
@@ -381,16 +386,16 @@ def page_details():
             else:
                 save_details(profile, first.strip(), last.strip(), int(age), gender,
                              int(height), float(weight), float(waist))
-                st.success(t("details_saved"))
+                st.toast(t("details_saved"), icon="✅")  # toast survives the rerun below
                 st.rerun()
     with st.container(key="card_bmi"):
         show_bmi(me)
 
 routing = {
-    menu_map["dashboard"]: page_dashboard,
-    menu_map["upload"]: page_upload,
-    menu_map["timeline"]: page_timeline,
-    menu_map["details"]: page_details,
+    "dashboard": page_dashboard,
+    "upload": page_upload,
+    "timeline": page_timeline,
+    "details": page_details,
 }
 routing[selected_page]()
 st.caption(f"🛡️ {t('disclaimer')}")
