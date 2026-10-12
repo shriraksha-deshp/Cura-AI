@@ -1,4 +1,5 @@
 import calendar
+from datetime import date, datetime
 import hashlib
 import hmac
 import html
@@ -8,19 +9,18 @@ import secrets
 import sqlite3
 import time
 import uuid
-from datetime import date, datetime
 
-import pandas as pd
-import streamlit as st
 from google import genai
 from google.genai import types
+import pandas as pd
+import streamlit as st
 
 # ============================================================
 # Cura AI — educational medical-document organizer
-# Run: python -m streamlit run app.py
 # ============================================================
 
-MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+# Fixed model fallback: gemini-2.5-flash
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 DB = os.getenv("DB_PATH", "records.db")
 LANG_OPTIONS = ["ENGLISH", "HINDI", "TELUGU", "TAMIL", "KANNADA"]
 
@@ -189,57 +189,55 @@ STRINGS = {
         "open_modal": "🔍 ಪೂರ್ಣ ವರದಿ ತೆರೆಯಿರಿ", "quick_edit": "✏️ ಅಳತೆಗಳನ್ನು ತ್ವರಿತವಾಗಿ ಬದಲಾಯಿಸಿ",
         "inspect": "🔍 ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಿ", "delete": "ಉಳಿಸಿದ ವರದಿಯನ್ನು ಅಳಿಸಿ",
     },
+    "TAMIL": {
+        "disclaimer": "Cura AI மருத்துவ ஆவணங்களை எளிய மொழியில் விளக்குகிறது. இது மருத்துவர் அல்ல; நோயைக் கண்டறியாது, சிகிச்சையையும் பரிந்துரைக்காது. மருத்துவ முடிவுகளுக்கு தகுதியான மருத்துவரை அணுகவும்.",
+        "brand": "🩺 Cura AI", "tagline": "✨ உங்கள் பன்மொழி ஆரோக்கிய துணை",
+        "signin_caption": "உங்கள் சுகாதார அறிக்கைகளைப் பார்க்கவும் ஒழுங்கமைக்கவும் உள்நுழைக.",
+        "login": "உள்நுழை", "create_account": "கணக்கை உருவாக்கு", "username": "பயனர் பெயர்",
+        "password": "கடவுச்சொல்", "choose_username": "பயனர் பெயரைத் தேர்ந்தெடுக்கவும்",
+        "choose_password": "கடவுச்சொல் (குறைந்தது 6 எழுத்துகள்)", "mock_abha": "ABHA ID (டெமோ)",
+        "wrong_login": "பயனர் பெயர் அல்லது கடவுச்சொல் தவறானது.",
+        "validation_err": "பயனர் பெயர் குறைந்தது 3 எழுத்துகளும், கடவுச்சொல் குறைந்தது 6 எழுத்துகளும் இருக்க வேண்டும்.",
+        "user_taken": "இந்த பயனர் பெயர் ஏற்கனவே உள்ளது.", "menu_dashboard": "🏠 டாஷ்போர்டு",
+        "menu_upload": "📄 அறிக்கையைப் பதிவேற்று", "menu_timeline": "🕒 காலவரிசை",
+        "menu_details": "👤 என் விவரங்கள்", "summary_lang": "மொழி", "gemini_key": "Gemini API விசை",
+        "logout": "வெளியேறு", "demo_notice": "🌱 டெமோ பயன்முறை: சோதனைக்கு மாதிரி பதிவுகளைப் பயன்படுத்தவும்.",
+        "hello": "வணக்கம், வருக", "saved_reports": "சுகாதார அறிக்கைகள் சேமிக்கப்பட்டன",
+        "test_trends": "📊 பரிசோதனை போக்குகள்",
+        "trend_empty": "போக்குகளைப் பார்க்க ஆய்வக அறிக்கையைப் பதிவேற்றி சேமிக்கவும்.",
+        "trend_hint": "ஒப்பிட மேலும் அறிக்கைகளைச் சேமிக்கவும்.",
+        "weight": "எடை", "height": "உயரம்", "age": "வயது", "bmi": "BMI",
+        "add_details_hint": "BMI கணக்கிட, என் விவரங்களில் வயது, உயரம், எடையை உள்ளிடவும்.",
+        "questions_for_doc": "💬 மருத்துவரிடம் கேட்க வேண்டிய கேள்விகள்",
+        "questions_empty": "அறிக்கையைச் சேமித்தவுடன் கேள்விகள் தோன்றும்.",
+        "your_treatment": "💊 சமீபத்திய அறிக்கையில் உள்ள மருந்துகள்",
+        "treatment_empty": "சேமித்த மருந்துச் சீட்டுகளின் மருந்துகள் இங்கே தோன்றும்.",
+        "from": "ஆவண தேதி:", "cal_blue": "குறிக்கப்பட்ட தேதிகளில் ஆவணங்கள் சேமிக்கப்பட்டுள்ளன.",
+        "upload_title": "அறிக்கையை ஸ்கேன் செய்து பகுப்பாய்வு செய்",
+        "upload_label": "மருந்துச் சீட்டு அல்லது ஆய்வக அறிக்கை (JPG, PNG, PDF)",
+        "analyze_btn": "✨ ஆவணத்தைப் பகுப்பாய்வு செய்",
+        "api_key_err": "AI சேவை கட்டமைக்கப்படவில்லை. தயவுசெய்து Cura AI குழுவைத் தொடர்பு கொள்ளவும்.",
+        "reading_doc": "ஆவணம் பகுப்பாய்வு செய்யப்படுகிறது…", "read_err": "ஆவணத்தைப் பகுப்பாய்வு செய்ய முடியவில்லை:",
+        "save_timeline": "💾 காலவரிசையில் சேமி", "saved_success": "அறிக்கை காலவரிசையில் சேமிக்கப்பட்டது.",
+        "timeline_title": "🕒 சுகாதார காலவரிசை", "timeline_empty": "இன்னும் வரலாறு இல்லை. முதல் ஆவணத்தைப் பதிவேற்றவும்.",
+        "details_title": "👤 சுகாதார சுயவிவரம்", "details_saved": "சுயவிவரம் புதுப்பிக்கப்பட்டது.",
+        "details_caption": "இந்த விவரங்கள் சூழலுக்காக மட்டுமே; மருத்துவரின் மதிப்பீட்டுக்கு மாற்றல்ல.",
+        "first_name": "முதல் பெயர்", "last_name": "குடும்பப் பெயர்", "age_label": "வயது (ஆண்டுகள்)",
+        "gender_label": "பாலினம்", "height_label": "உயரம் (செ.மீ)", "weight_label": "எடை (கிலோ)",
+        "waist_label": "இடுப்பு (செ.மீ), விருப்பத்திற்குரியது", "save_details_btn": "விவரங்களைச் சேமி",
+        "required_err": "முதல் பெயர், வயது, உயரம், எடையை உள்ளிடவும்.", "summary": "மருத்துவ சுருக்கம்",
+        "no_summary": "சுருக்கம் இல்லை.", "diagnoses_mentioned": "குறிப்பிடப்பட்டவை:",
+        "medicines": "மருந்துகள்", "test_results": "பரிசோதனை முடிவுகள்", "qa_title": "🌱 எளிய மொழியில் பதில்கள்",
+        "qa_caption": "பொதுவான தகவல்; மருத்துவரிடம் உறுதிப்படுத்தவும்.",
+        "more_questions": "மருத்துவரிடம் கேட்க வேண்டிய கேள்விகள்",
+        "no_findings": "பகுப்பாய்வில் அதிக/குறைந்த குறிப்புகள் இல்லை",
+        "bmi_note_intro": "உங்கள் அளவீடுகளின் அடிப்படையிலான BMI குறிப்பு:",
+        "female": "பெண்", "male": "ஆண்", "other": "மற்றவை", "prefer_not": "சொல்ல விரும்பவில்லை",
+        "open_modal": "🔍 முழு அறிக்கையைத் திற", "quick_edit": "✏️ அளவீடுகளைத் திருத்து",
+        "inspect": "🔍 விவரங்களைப் பார்", "delete": "சேமித்த அறிக்கையை நீக்கு",
+    },
 }
 
-STRINGS["TAMIL"] = {
-    "disclaimer": "Cura AI மருத்துவ ஆவணங்களை எளிய மொழியில் விளக்குகிறது. இது மருத்துவர் அல்ல; நோயைக் கண்டறியாது, சிகிச்சையையும் பரிந்துரைக்காது. மருத்துவ முடிவுகளுக்கு தகுதியான மருத்துவரை அணுகவும்.",
-    "brand": "🩺 Cura AI", "tagline": "✨ உங்கள் பன்மொழி ஆரோக்கிய துணை",
-    "signin_caption": "உங்கள் சுகாதார அறிக்கைகளைப் பார்க்கவும் ஒழுங்கமைக்கவும் உள்நுழைக.",
-    "login": "உள்நுழை", "create_account": "கணக்கை உருவாக்கு", "username": "பயனர் பெயர்",
-    "password": "கடவுச்சொல்", "choose_username": "பயனர் பெயரைத் தேர்ந்தெடுக்கவும்",
-    "choose_password": "கடவுச்சொல் (குறைந்தது 6 எழுத்துகள்)", "mock_abha": "ABHA ID (டெமோ)",
-    "wrong_login": "பயனர் பெயர் அல்லது கடவுச்சொல் தவறானது.",
-    "validation_err": "பயனர் பெயர் குறைந்தது 3 எழுத்துகளும், கடவுச்சொல் குறைந்தது 6 எழுத்துகளும் இருக்க வேண்டும்.",
-    "user_taken": "இந்த பயனர் பெயர் ஏற்கனவே உள்ளது.", "menu_dashboard": "🏠 டாஷ்போர்டு",
-    "menu_upload": "📄 அறிக்கையைப் பதிவேற்று", "menu_timeline": "🕒 காலவரிசை",
-    "menu_details": "👤 என் விவரங்கள்", "summary_lang": "மொழி", "gemini_key": "Gemini API விசை",
-    "logout": "வெளியேறு", "demo_notice": "🌱 டெமோ பயன்முறை: சோதனைக்கு மாதிரி பதிவுகளைப் பயன்படுத்தவும்.",
-    "hello": "வணக்கம், வருக", "saved_reports": "சுகாதார அறிக்கைகள் சேமிக்கப்பட்டன",
-    "test_trends": "📊 பரிசோதனை போக்குகள்",
-    "trend_empty": "போக்குகளைப் பார்க்க ஆய்வக அறிக்கையைப் பதிவேற்றி சேமிக்கவும்.",
-    "trend_hint": "ஒப்பிட மேலும் அறிக்கைகளைச் சேமிக்கவும்.",
-    "weight": "எடை", "height": "உயரம்", "age": "வயது", "bmi": "BMI",
-    "add_details_hint": "BMI கணக்கிட, என் விவரங்களில் வயது, உயரம், எடையை உள்ளிடவும்.",
-    "questions_for_doc": "💬 மருத்துவரிடம் கேட்க வேண்டிய கேள்விகள்",
-    "questions_empty": "அறிக்கையைச் சேமித்தவுடன் கேள்விகள் தோன்றும்.",
-    "your_treatment": "💊 சமீபத்திய அறிக்கையில் உள்ள மருந்துகள்",
-    "treatment_empty": "சேமித்த மருந்துச் சீட்டுகளின் மருந்துகள் இங்கே தோன்றும்.",
-    "from": "ஆவண தேதி:", "cal_blue": "குறிக்கப்பட்ட தேதிகளில் ஆவணங்கள் சேமிக்கப்பட்டுள்ளன.",
-    "upload_title": "அறிக்கையை ஸ்கேன் செய்து பகுப்பாய்வு செய்",
-    "upload_label": "மருந்துச் சீட்டு அல்லது ஆய்வக அறிக்கை (JPG, PNG, PDF)",
-    "analyze_btn": "✨ ஆவணத்தைப் பகுப்பாய்வு செய்",
-    "api_key_err": "AI சேவை கட்டமைக்கப்படவில்லை. தயவுசெய்து Cura AI குழுவைத் தொடர்பு கொள்ளவும்.",
-    "reading_doc": "ஆவணம் பகுப்பாய்வு செய்யப்படுகிறது…", "read_err": "ஆவணத்தைப் பகுப்பாய்வு செய்ய முடியவில்லை:",
-    "save_timeline": "💾 காலவரிசையில் சேமி", "saved_success": "அறிக்கை காலவரிசையில் சேமிக்கப்பட்டது.",
-    "timeline_title": "🕒 சுகாதார காலவரிசை", "timeline_empty": "இன்னும் வரலாறு இல்லை. முதல் ஆவணத்தைப் பதிவேற்றவும்.",
-    "details_title": "👤 சுகாதார சுயவிவரம்", "details_saved": "சுயவிவரம் புதுப்பிக்கப்பட்டது.",
-    "details_caption": "இந்த விவரங்கள் சூழலுக்காக மட்டுமே; மருத்துவரின் மதிப்பீட்டுக்கு மாற்றல்ல.",
-    "first_name": "முதல் பெயர்", "last_name": "குடும்பப் பெயர்", "age_label": "வயது (ஆண்டுகள்)",
-    "gender_label": "பாலினம்", "height_label": "உயரம் (செ.மீ)", "weight_label": "எடை (கிலோ)",
-    "waist_label": "இடுப்பு (செ.மீ), விருப்பத்திற்குரியது", "save_details_btn": "விவரங்களைச் சேமி",
-    "required_err": "முதல் பெயர், வயது, உயரம், எடையை உள்ளிடவும்.", "summary": "மருத்துவ சுருக்கம்",
-    "no_summary": "சுருக்கம் இல்லை.", "diagnoses_mentioned": "குறிப்பிடப்பட்டவை:",
-    "medicines": "மருந்துகள்", "test_results": "பரிசோதனை முடிவுகள்", "qa_title": "🌱 எளிய மொழியில் பதில்கள்",
-    "qa_caption": "பொதுவான தகவல்; மருத்துவரிடம் உறுதிப்படுத்தவும்.",
-    "more_questions": "மருத்துவரிடம் கேட்க வேண்டிய கேள்விகள்",
-    "no_findings": "பகுப்பாய்வில் அதிக/குறைந்த குறிப்புகள் இல்லை",
-    "bmi_note_intro": "உங்கள் அளவீடுகளின் அடிப்படையிலான BMI குறிப்பு:",
-    "female": "பெண்", "male": "ஆண்", "other": "மற்றவை", "prefer_not": "சொல்ல விரும்பவில்லை",
-    "open_modal": "🔍 முழு அறிக்கையைத் திற", "quick_edit": "✏️ அளவீடுகளைத் திருத்து",
-    "inspect": "🔍 விவரங்களைப் பார்", "delete": "சேமித்த அறிக்கையை நீக்கு",
-}
-
-# Strings for the FHIR export feature (all languages)
 _EXPORT_STRINGS = {
     "ENGLISH": {"export_fhir": "⬇️ Export FHIR (JSON)", "export_all": "⬇️ Export all records (FHIR bundle)"},
     "HINDI": {"export_fhir": "⬇️ FHIR निर्यात (JSON)", "export_all": "⬇️ सभी रिकॉर्ड निर्यात करें (FHIR)"},
@@ -314,7 +312,6 @@ def db():
             waist_cm REAL
         )
     """)
-    # Migrate databases created by older versions.
     cols = {row["name"] for row in con.execute("PRAGMA table_info(details)").fetchall()}
     for col in ("weight_kg", "waist_cm"):
         if col not in cols:
@@ -408,7 +405,6 @@ ABHA_SYSTEM = "https://healthid.ndhm.gov.in"
 INTERPRETATION = {"high": ("H", "High"), "low": ("L", "Low"), "normal": ("N", "Normal")}
 
 def fhir_gender(value):
-    """Map the (possibly translated) gender label saved in the profile to a FHIR code."""
     text = (value or "").strip().lower()
     for lang in STRINGS.values():
         for key in ("female", "male", "other"):
@@ -436,7 +432,6 @@ def _fhir_patient(username, abha, details):
     return patient
 
 def _fhir_record_resources(patient_ref, record):
-    """Convert one saved report into FHIR-style resources."""
     data = record.get("data") or {}
     rid = str(record.get("id") or uuid.uuid4())
     day = record.get("date") or str(date.today())
@@ -508,8 +503,6 @@ def _fhir_record_resources(patient_ref, record):
     return resources
 
 def to_fhir_bundle(username, abha, details, records):
-    """Build a FHIR-style Bundle (JSON string) for one or more saved reports.
-    Demonstration export: structured like FHIR R4 but not validated against a FHIR server."""
     patient = _fhir_patient(username, abha, details or {})
     patient_ref = f"Patient/{patient['id']}"
     entries = [{"resource": patient}]
@@ -523,19 +516,19 @@ def to_fhir_bundle(username, abha, details, records):
     }
     return json.dumps(bundle, ensure_ascii=False, indent=2)
 
-# -------------------- Gemini AI --------------------
+# -------------------- Client Configuration --------------------
 def server_key():
     key = os.getenv("GEMINI_API_KEY", "").strip()
     if key:
         return key
     try:
-        return str(st.secrets.get("GEMINI_API_KEY", "")).strip()
+        if "GEMINI_API_KEY" in st.secrets:
+            return str(st.secrets["GEMINI_API_KEY"]).strip()
     except Exception:
-        return ""
+        pass
+    return ""
 
 def api_key():
-    # The key is configured on the server (environment variable or Streamlit secrets).
-    # Users are never asked to enter one.
     return server_key()
 
 def context(me):
@@ -549,8 +542,11 @@ def context(me):
 def analyze(uploaded_file, lang, me=None):
     key = api_key()
     if not key:
-        raise RuntimeError("Gemini API key is missing.")
+        raise RuntimeError("API key is missing.")
+    
+    # Initialize standard client
     client = genai.Client(api_key=key)
+    
     file_part = types.Part.from_bytes(
         data=uploaded_file.getvalue(),
         mime_type=uploaded_file.type or "application/octet-stream"
@@ -566,9 +562,8 @@ def analyze(uploaded_file, lang, me=None):
     raw = response.text or ""
     start, end = raw.find("{"), raw.rfind("}")
     if start < 0 or end < start:
-        raise ValueError("Gemini did not return a valid JSON object.")
+        raise ValueError("Model response did not return a valid JSON object.")
     data = json.loads(raw[start:end + 1])
-    # Normalize expected keys so UI rendering is resilient to incomplete responses.
     data.setdefault("document_type", "other")
     data.setdefault("document_date", None)
     data.setdefault("doctor_or_lab", None)
@@ -608,7 +603,6 @@ def bmi_info(me):
         return (None, "info",
                 "For people under 18, BMI should be interpreted using age- and sex-specific growth charts.")
     bmi = float(weight) / ((float(height) / 100) ** 2)
-    # Common adult Asian screening cut-offs; not a diagnosis.
     if bmi < 18.5:
         level, message = "warn", "BMI is below the usual adult screening range."
     elif bmi < 23:
