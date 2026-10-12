@@ -2,12 +2,15 @@
 
 > Turn confusing prescriptions and lab reports into clear, multilingual, easy-to-follow health information.
 
-🔗 **Live Demo:** `PASTE-YOUR-STREAMLIT-LINK-HERE`
+🔗 **Live Demo:** `https://cura-ai-health.streamlit.app/`
 
-Upload a prescription or lab report (photo/PDF). Cura AI extracts medicines, dosages, test values and
+FIRST LOGIN TO CURA AI BY LOGGING IN TO DEMO ACCOUNT
+username=demoaccount123
+password=demo@123
+Then add your details in "MY DETAILS" To Chech Your BMI i.e Body Mass Index
+Now,Upload a prescription or lab report (photo/PDF). Cura AI extracts medicines, dosages, test values and
 dates, explains them in simple language (**English, Hindi, Telugu, Tamil, Kannada**), saves them to a personal
-health timeline, tracks your results over time, and exports **FHIR-style records** tagged with a
-**mock ABHA ID** to show how the app fits into India's digital health ecosystem.
+health timeline, tracks your results over time.
 
 ---
 
